@@ -5,15 +5,23 @@
 @layer base {
   * { box-sizing: border-box; }
   body {
-    background: #0f0f13;
-    color: #e2e8f0;
     font-family: 'DM Sans', sans-serif;
     -webkit-font-smoothing: antialiased;
   }
+  .dark {
+    background: #0f0f13;
+    color: #e2e8f0;
+  }
+  .light {
+    background: #f8fafc;
+    color: #1e293b;
+  }
   ::-webkit-scrollbar { width: 6px; height: 6px; }
   ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: #2d2d3d; border-radius: 3px; }
-  ::-webkit-scrollbar-thumb:hover { background: #3d3d55; }
+  .dark ::-webkit-scrollbar-thumb { background: #2d2d3d; border-radius: 3px; }
+  .dark ::-webkit-scrollbar-thumb:hover { background: #3d3d55; }
+  .light ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+  .light ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 }
 
 @layer utilities {
@@ -26,4 +34,7 @@
     background: rgba(255,255,255,0.07);
     border-color: rgba(255,255,255,0.12);
   }
+  .dark .glass { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.08); }
+  .light .glass { background: rgba(0,0,0,0.03); border-color: rgba(0,0,0,0.08); }
+  * { transition: background-color 0.2s ease, border-color 0.2s ease, color 0.15s ease; }
 }

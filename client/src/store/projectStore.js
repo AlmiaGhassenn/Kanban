@@ -1,6 +1,44 @@
 import { create } from 'zustand';
 import api from '../api/axios';
 
+const useNotificationStore = create((set) => ({
+  notifications: [],
+  addNotification: (notification) => set((s) => ({
+    notifications: [...s.notifications, { id: Date.now(), ...notification }]
+  })),
+  removeNotification: (id) => set((s) => ({
+    notifications: s.notifications.filter((n) => n.id !== id)
+  })),
+  clearAll: () => set({ notifications: [] }),
+}));
+
+const checkDueDates = (tasks) => {
+  const now = new Date();
+  const tomorrow = new Date(now);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  
+  tasks.forEach((task) => {
+    if (!task.dueDate) return;
+    const dueDate = new Date(task.dueDate);
+    
+    if (dueDate < now) {
+      useNotificationStore.getState().addNotification({
+        type: 'overdue',
+        title: 'Task overdue',
+        message: `"${task.title}" is past its due date`,
+        taskId: task._id,
+      });
+    } else if (dueDate <= tomorrow) {
+      useNotificationStore.getState().addNotification({
+        type: 'due-soon',
+        title: 'Due soon',
+        message: `"${task.title}" is due soon`,
+        taskId: task._id,
+      });
+    }
+  });
+};
+
 const useProjectStore = create((set, get) => ({
   projects: [],
   currentProject: null,
@@ -26,6 +64,7 @@ const useProjectStore = create((set, get) => ({
         api.get(`/tasks/project/${id}`),
       ]);
       set({ currentProject: projectRes.data, tasks: tasksRes.data, loading: false });
+      setTimeout(() => checkDueDates(tasksRes.data), 2000);
     } catch (err) {
       set({ error: err.response?.data?.message || 'Failed to fetch project', loading: false });
     }
@@ -108,6 +147,29 @@ const useProjectStore = create((set, get) => ({
     return data;
   },
 
+  addSubTask: async (taskId, title) => {
+    const { data } = await api.post(`/tasks/${taskId}/subtasks`, { title });
+    set((s) => ({ tasks: s.tasks.map((t) => (t._id === taskId ? data : t)) }));
+    return data;
+  },
+
+  updateSubTask: async (taskId, subTaskId, payload) => {
+    const { data } = await api.put(`/tasks/${taskId}/subtasks/${subTaskId}`, payload);
+    set((s) => ({ tasks: s.tasks.map((t) => (t._id === taskId ? data : t)) }));
+    return data;
+  },
+
+  deleteSubTask: async (taskId, subTaskId) => {
+    const { data } = await api.delete(`/tasks/${taskId}/subtasks/${subTaskId}`);
+    set((s) => ({ tasks: s.tasks.map((t) => (t._id === taskId ? data : t)) }));
+    return data;
+  },
+
+  fetchActivities: async (projectId) => {
+    const { data } = await api.get(`/activities/project/${projectId}`);
+    return data;
+  },
+
   inviteMember: async (projectId, email, role) => {
     const { data } = await api.post(`/members/${projectId}/invite`, { email, role });
     set({ currentProject: data });
@@ -147,4 +209,5 @@ const useProjectStore = create((set, get) => ({
   setCurrentProject: (project) => set({ currentProject: project }),
 }));
 
+export { useNotificationStore };
 export default useProjectStore;

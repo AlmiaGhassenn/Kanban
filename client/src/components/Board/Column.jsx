@@ -45,23 +45,23 @@ export default function Column({ column, tasks, projectId, onTaskClick, onTaskCr
               onChange={(e) => setColTitle(e.target.value)}
               onBlur={handleRenameColumn}
               onKeyDown={(e) => e.key === 'Enter' && handleRenameColumn()}
-              className="bg-white/5 border border-white/10 rounded px-2 py-0.5 text-sm text-white focus:outline-none focus:border-brand-500 w-32"
+              className="dark:bg-white/5 dark:border-white/10 dark:text-white light:bg-white light:border-slate-300 light:text-slate-800 rounded px-2 py-0.5 text-sm focus:outline-none focus:border-brand-500 w-32"
             />
           ) : (
             <h3
-              className="text-sm font-medium text-slate-300 cursor-pointer hover:text-white transition"
+              className="text-sm font-medium dark:text-slate-300 light:text-slate-700 cursor-pointer hover:dark:text-white light:hover:text-slate-900 transition"
               onDoubleClick={() => setEditing(true)}
             >
               {column.title}
             </h3>
           )}
-          <span className="text-xs text-slate-600 tabular-nums">{tasks.length}</span>
+          <span className="dark:text-slate-600 light:text-slate-400 text-xs tabular-nums">{tasks.length}</span>
         </div>
 
         <div className="flex items-center gap-1">
           <button
             onClick={() => setAdding(true)}
-            className="text-slate-600 hover:text-slate-300 transition p-1 rounded"
+            className="dark:text-slate-600 dark:hover:text-slate-300 light:text-slate-400 light:hover:text-slate-600 transition p-1 rounded"
           >
             <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
@@ -69,7 +69,7 @@ export default function Column({ column, tasks, projectId, onTaskClick, onTaskCr
           </button>
           <button
             onClick={handleDelete}
-            className="text-slate-600 hover:text-red-400 transition p-1 rounded"
+            className="dark:text-slate-600 dark:hover:text-red-400 light:text-slate-400 light:hover:text-red-500 transition p-1 rounded"
           >
             <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -84,7 +84,7 @@ export default function Column({ column, tasks, projectId, onTaskClick, onTaskCr
             ref={provided.innerRef}
             {...provided.droppableProps}
             className={`flex-1 min-h-16 rounded-xl p-2 transition ${
-              snapshot.isDraggingOver ? 'bg-brand-500/5 border border-brand-500/20' : 'bg-white/[0.02]'
+              snapshot.isDraggingOver ? 'bg-brand-500/5 border border-brand-500/20' : 'dark:bg-white/[0.02] light:bg-slate-100/50'
             }`}
           >
             {tasks.map((task, index) => (
@@ -101,13 +101,13 @@ export default function Column({ column, tasks, projectId, onTaskClick, onTaskCr
                   onChange={(e) => setTitle(e.target.value)}
                   onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) handleAddTask(e); if (e.key === 'Escape') setAdding(false); }}
                   placeholder="Task title..."
-                  className="w-full bg-[#16161e] border border-brand-500/50 rounded-lg px-3 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none resize-none"
+                  className="w-full dark:bg-[#16161e] light:bg-white dark:border-brand-500/50 light:border-brand-500 dark:text-white light:text-slate-800 dark:placeholder-slate-500 light:placeholder-slate-400 rounded-lg px-3 py-2.5 text-sm focus:outline-none resize-none"
                 />
                 <div className="flex gap-2 mt-1.5">
                   <button type="submit" className="bg-brand-500 hover:bg-brand-600 text-white text-xs font-medium px-3 py-1.5 rounded-md transition">
                     Add
                   </button>
-                  <button type="button" onClick={() => setAdding(false)} className="text-slate-500 hover:text-white text-xs px-2 py-1.5 transition">
+                  <button type="button" onClick={() => setAdding(false)} className="dark:text-slate-500 dark:hover:text-white light:text-slate-500 light:hover:text-slate-700 text-xs px-2 py-1.5 transition">
                     Cancel
                   </button>
                 </div>
@@ -115,7 +115,7 @@ export default function Column({ column, tasks, projectId, onTaskClick, onTaskCr
             ) : (
               <button
                 onClick={() => setAdding(true)}
-                className="w-full flex items-center gap-2 px-2 py-2 text-slate-600 hover:text-slate-400 text-sm transition rounded-lg hover:bg-white/5 mt-1"
+                className="w-full flex items-center gap-2 px-2 py-2 dark:text-slate-600 light:text-slate-400 dark:hover:text-slate-400 light:hover:text-slate-600 text-sm transition rounded-lg dark:hover:bg-white/5 light:hover:bg-slate-100 mt-1"
               >
                 <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />

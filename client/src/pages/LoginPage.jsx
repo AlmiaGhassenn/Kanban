@@ -24,7 +24,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0f0f13] flex items-center justify-center p-4">
+    <div className="min-h-screen dark:bg-[#0f0f13] light:bg-slate-100 flex items-center justify-center p-4">
       <div className="w-full max-w-sm">
         <div className="mb-8 text-center">
           <div className="inline-flex items-center gap-2 mb-6">
@@ -33,35 +33,35 @@ export default function LoginPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
               </svg>
             </div>
-            <span className="text-white font-semibold text-lg tracking-tight">Kanban</span>
+            <span className="dark:text-white light:text-slate-800 font-semibold text-lg tracking-tight">Kanban</span>
           </div>
-          <h1 className="text-2xl font-semibold text-white mb-1">Welcome back</h1>
-          <p className="text-slate-400 text-sm">Sign in to your workspace</p>
+          <h1 className="text-2xl font-semibold dark:text-white light:text-slate-800 mb-1">Welcome back</h1>
+          <p className="dark:text-slate-400 light:text-slate-500 text-sm">Sign in to your workspace</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
-            <div className="bg-red-500/10 border border-red-500/20 rounded-lg px-4 py-3 text-red-400 text-sm">
+            <div className="dark:bg-red-500/10 dark:border-red-500/20 light:bg-red-50 light:border-red-200 rounded-lg px-4 py-3 dark:text-red-400 light:text-red-600 text-sm">
               {error}
             </div>
           )}
           <div>
-            <label className="block text-sm text-slate-400 mb-1.5">Email</label>
+            <label className="block text-sm dark:text-slate-400 light:text-slate-600 mb-1.5">Email</label>
             <input
               type="email" required
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
-              className="w-full bg-white/5 border border-white/10 rounded-lg px-3.5 py-2.5 text-white text-sm placeholder-slate-500 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition"
+              className="w-full dark:bg-white/5 dark:border-white/10 dark:text-white dark:placeholder-slate-500 light:bg-white light:border-slate-300 light:text-slate-800 light:placeholder-slate-400 rounded-lg px-3.5 py-2.5 text-sm focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition"
               placeholder="you@example.com"
             />
           </div>
           <div>
-            <label className="block text-sm text-slate-400 mb-1.5">Password</label>
+            <label className="block text-sm dark:text-slate-400 light:text-slate-600 mb-1.5">Password</label>
             <input
               type="password" required
               value={form.password}
               onChange={(e) => setForm({ ...form, password: e.target.value })}
-              className="w-full bg-white/5 border border-white/10 rounded-lg px-3.5 py-2.5 text-white text-sm placeholder-slate-500 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition"
+              className="w-full dark:bg-white/5 dark:border-white/10 dark:text-white dark:placeholder-slate-500 light:bg-white light:border-slate-300 light:text-slate-800 light:placeholder-slate-400 rounded-lg px-3.5 py-2.5 text-sm focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition"
               placeholder="••••••••"
             />
           </div>
@@ -73,7 +73,7 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <p className="text-center text-slate-500 text-sm mt-6">
+        <p className="text-center dark:text-slate-500 light:text-slate-500 text-sm mt-6">
           No account?{' '}
           <Link to="/register" className="text-brand-500 hover:text-brand-400 transition">
             Create one

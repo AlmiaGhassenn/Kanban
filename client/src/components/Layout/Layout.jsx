@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import useAuthStore from '../../store/authStore';
 import useProjectStore from '../../store/projectStore';
+import ThemeToggle from '../ThemeToggle';
 
 const Avatar = ({ name, size = 'sm' }) => {
   const initials = name?.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2) || '?';
@@ -38,17 +39,20 @@ export default function Layout() {
   };
 
   return (
-    <div className="flex h-screen bg-[#0f0f13] overflow-hidden">
+    <div className="flex h-screen dark:bg-[#0f0f13] light:bg-white overflow-hidden">
       {/* Sidebar */}
-      <aside className="w-56 shrink-0 flex flex-col border-r border-white/5 bg-[#0d0d11]">
-        <div className="p-4 border-b border-white/5">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-md bg-brand-500 flex items-center justify-center shrink-0">
-              <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="white" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
-              </svg>
+      <aside className="w-56 shrink-0 flex flex-col border-r dark:border-white/5 light:border-slate-200 dark:bg-[#0d0d11] light:bg-slate-50">
+        <div className="p-4 border-b dark:border-white/5 light:border-slate-200">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-md bg-brand-500 flex items-center justify-center shrink-0">
+                <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="white" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
+                </svg>
+              </div>
+              <span className="dark:text-white light:text-slate-800 font-semibold text-sm tracking-tight">Kanban</span>
             </div>
-            <span className="text-white font-semibold text-sm tracking-tight">Kanban</span>
+            <ThemeToggle />
           </div>
         </div>
 
@@ -57,8 +61,8 @@ export default function Layout() {
             to="/dashboard"
             className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition ${
               location.pathname === '/dashboard'
-                ? 'bg-white/10 text-white'
-                : 'text-slate-400 hover:text-white hover:bg-white/5'
+                ? 'dark:bg-white/10 dark:text-white light:bg-slate-200 light:text-slate-800'
+                : 'dark:text-slate-400 dark:hover:text-white dark:hover:bg-white/5 light:text-slate-600 light:hover:text-slate-800 light:hover:bg-slate-100'
             }`}
           >
             <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
@@ -69,10 +73,10 @@ export default function Layout() {
 
           <div className="pt-4 pb-1">
             <div className="flex items-center justify-between px-3 mb-1">
-              <span className="text-xs text-slate-600 font-medium uppercase tracking-wider">Projects</span>
+              <span className="dark:text-slate-600 light:text-slate-500 text-xs font-medium uppercase tracking-wider">Projects</span>
               <button
                 onClick={() => setShowNewProject(true)}
-                className="text-slate-500 hover:text-white transition p-0.5 rounded"
+                className="dark:text-slate-500 dark:hover:text-white light:text-slate-400 light:hover:text-slate-700 transition p-0.5 rounded"
               >
                 <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
@@ -88,7 +92,7 @@ export default function Layout() {
                   onChange={(e) => setNewProjectName(e.target.value)}
                   onBlur={() => { setShowNewProject(false); setNewProjectName(''); }}
                   placeholder="Project name..."
-                  className="w-full bg-white/5 border border-white/10 rounded-md px-2.5 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-brand-500"
+                  className="w-full dark:bg-white/5 dark:border-white/10 dark:text-white dark:placeholder-slate-500 light:bg-white light:border-slate-300 light:text-slate-800 light:placeholder-slate-400 rounded-md px-2.5 py-1.5 text-xs focus:outline-none focus:border-brand-500"
                 />
               </form>
             )}
@@ -99,8 +103,8 @@ export default function Layout() {
                 to={`/project/${project._id}`}
                 className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition ${
                   location.pathname === `/project/${project._id}`
-                    ? 'bg-white/10 text-white'
-                    : 'text-slate-400 hover:text-white hover:bg-white/5'
+                    ? 'dark:bg-white/10 dark:text-white light:bg-slate-200 light:text-slate-800'
+                    : 'dark:text-slate-400 dark:hover:text-white dark:hover:bg-white/5 light:text-slate-600 light:hover:text-slate-800 light:hover:bg-slate-100'
                 }`}
               >
                 <div className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ background: project.color || '#6366f1' }} />
@@ -109,19 +113,19 @@ export default function Layout() {
             ))}
 
             {projects.length === 0 && (
-              <p className="px-3 py-2 text-xs text-slate-600">No projects yet</p>
+              <p className="px-3 py-2 dark:text-slate-600 light:text-slate-400 text-xs">No projects yet</p>
             )}
           </div>
         </nav>
 
-        <div className="p-3 border-t border-white/5">
+        <div className="p-3 border-t dark:border-white/5 light:border-slate-200">
           <div className="flex items-center gap-2.5 px-2 py-1.5">
             <Avatar name={user?.name} />
             <div className="flex-1 min-w-0">
-              <p className="text-sm text-white truncate leading-tight">{user?.name}</p>
-              <p className="text-xs text-slate-500 truncate">{user?.email}</p>
+              <p className="dark:text-white light:text-slate-800 text-sm truncate leading-tight">{user?.name}</p>
+              <p className="dark:text-slate-500 light:text-slate-500 text-xs truncate">{user?.email}</p>
             </div>
-            <button onClick={handleLogout} className="text-slate-500 hover:text-white transition shrink-0" title="Sign out">
+            <button onClick={handleLogout} className="dark:text-slate-500 dark:hover:text-white light:text-slate-400 light:hover:text-slate-700 transition shrink-0" title="Sign out">
               <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
               </svg>

@@ -8,6 +8,14 @@ const commentSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+const subTaskSchema = new mongoose.Schema(
+  {
+    title: { type: String, required: true, trim: true },
+    completed: { type: Boolean, default: false },
+  },
+  { timestamps: true }
+);
+
 const taskSchema = new mongoose.Schema(
   {
     title: { type: String, required: true, trim: true },
@@ -21,6 +29,7 @@ const taskSchema = new mongoose.Schema(
     order: { type: Number, default: 0 },
     labels: [{ type: String }],
     comments: [commentSchema],
+    subTasks: [subTaskSchema],
   },
   { timestamps: true }
 );
