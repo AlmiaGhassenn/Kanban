@@ -1,24 +1,27 @@
 import { useEffect, useState, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { DragDropContext } from '@hello-pangea/dnd';
-import useProjectStore from '../store/projectStore';
+import useProjectStore, { useNotificationStore, checkDueDates } from '../store/projectStore';
 import useAuthStore from '../store/authStore';
 import useSocket from '../hooks/useSocket';
 import useKeyboardShortcuts from '../hooks/useKeyboardShortcuts';
 import Column from '../components/Board/Column';
 import TaskModal from '../components/Board/TaskModal';
 import ActivityPanel from '../components/Board/ActivityPanel';
+import ScheduleView from '../components/Board/ScheduleView';
 import Select from '../components/Board/Select';
 
 export default function BoardPage() {
   const { id } = useParams();
-  const { currentProject, tasks, loading, fetchProject, createTask, moveTask, addColumn } = useProjectStore();
+  const { currentProject, tasks, loading, fetchProject, createTask, moveTask, addColumn, requestBrowserNotificationPermission, generateShareToken } = useProjectStore();
+  const addNotification = useNotificationStore((s) => s.addNotification);
   const { user } = useAuthStore();
   const { emit } = useSocket(id);
   const searchInputRef = useRef(null);
 
   const [selectedTask, setSelectedTask] = useState(null);
   const [addingColumn, setAddingColumn] = useState(false);
+  const [viewMode, setViewMode] = useState('board');
   const [newColTitle, setNewColTitle] = useState('');
   const [inviteEmail, setInviteEmail] = useState('');
   const [showInvite, setShowInvite] = useState(false);
@@ -32,6 +35,18 @@ export default function BoardPage() {
   const [filterLabel, setFilterLabel] = useState('');
 
   useEffect(() => { fetchProject(id); }, [id]);
+
+  useEffect(() => {
+    requestBrowserNotificationPermission();
+  }, [requestBrowserNotificationPermission]);
+
+  useEffect(() => {
+    if (tasks.length) checkDueDates(tasks);
+    const interval = setInterval(() => {
+      if (tasks.length) checkDueDates(tasks);
+    }, 60000);
+    return () => clearInterval(interval);
+  }, [tasks]);
 
   useKeyboardShortcuts({
     onNewTask: () => setShowAddTaskColumn(currentProject?.columns?.[0]?._id || null),
@@ -77,6 +92,29 @@ export default function BoardPage() {
   const handleTaskCreate = async (payload) => {
     const task = await createTask(payload);
     emit('task:created', { projectId: id, task });
+  };
+
+  const handleCopyInviteLink = async () => {
+    try {
+      let project = currentProject;
+      if (!project?.shareToken) {
+        project = await generateShareToken(id);
+      }
+      const link = project?.shareToken ? `${window.location.origin}/join/${project.shareToken}` : '';
+      if (!link) return;
+      await navigator.clipboard.writeText(link);
+      addNotification({
+        type: 'info',
+        title: 'Invite link copied',
+        message: 'You can share this link with teammates',
+      });
+    } catch (err) {
+      addNotification({
+        type: 'error',
+        title: 'Copy failed',
+        message: err.response?.data?.message || 'Could not copy invite link',
+      });
+    }
   };
 
   const handleAddColumn = async (e) => {
@@ -181,6 +219,22 @@ export default function BoardPage() {
               </button>
             )}
           </div>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setViewMode('board')}
+              className={`text-xs px-2 py-1 rounded-lg transition ${viewMode === 'board' ? 'bg-brand-500 text-white' : 'dark:text-slate-400 light:text-slate-600 dark:hover:bg-white/5 light:hover:bg-slate-100'}`}
+            >
+              Board
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode('schedule')}
+              className={`text-xs px-2 py-1 rounded-lg transition ${viewMode === 'schedule' ? 'bg-brand-500 text-white' : 'dark:text-slate-400 light:text-slate-600 dark:hover:bg-white/5 light:hover:bg-slate-100'}`}
+            >
+              Schedule
+            </button>
+          </div>
 
           <div className="flex -space-x-1.5">
             {allMembers.slice(0, 5).map((m, i) => {
@@ -201,6 +255,15 @@ export default function BoardPage() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             Activity
+          </button>
+          <button
+            onClick={handleCopyInviteLink}
+            className="flex items-center gap-1.5 text-sm dark:text-slate-400 dark:hover:text-white light:text-slate-600 light:hover:text-slate-800 border dark:border-white/10 light:border-slate-200 dark:hover:border-white/20 px-3 py-1.5 rounded-lg transition"
+          >
+            <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 12H9m6 0a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            Copy link
           </button>
           <div className="group relative">
             <button className="flex items-center gap-1.5 text-sm dark:text-slate-600 dark:hover:text-slate-400 light:text-slate-500 light:hover:text-slate-700 px-2 py-1.5 rounded-lg transition">
@@ -231,48 +294,52 @@ export default function BoardPage() {
       </div>
 
       {/* Board */}
-      <DragDropContext onDragEnd={onDragEnd}>
-        <div className="flex-1 overflow-x-auto overflow-y-hidden">
-          <div className="flex gap-4 p-6 h-full" style={{ minWidth: 'max-content' }}>
-            {sortedColumns.map((col) => (
-              <Column
-                key={col._id}
-                column={col}
-                tasks={getColumnFilteredTasks(col._id)}
-                projectId={id}
-                onTaskClick={setSelectedTask}
-                onTaskCreate={handleTaskCreate}
-                socket={{ emit }}
-              />
-            ))}
+      {viewMode === 'schedule' ? (
+        <ScheduleView tasks={filteredTasks} onTaskClick={setSelectedTask} />
+      ) : (
+        <DragDropContext onDragEnd={onDragEnd}>
+          <div className="flex-1 overflow-x-auto overflow-y-hidden">
+            <div className="flex gap-4 p-6 h-full" style={{ minWidth: 'max-content' }}>
+              {sortedColumns.map((col) => (
+                <Column
+                  key={col._id}
+                  column={col}
+                  tasks={getColumnFilteredTasks(col._id)}
+                  projectId={id}
+                  onTaskClick={setSelectedTask}
+                  onTaskCreate={handleTaskCreate}
+                  socket={{ emit }}
+                />
+              ))}
 
-            <div className="w-72 shrink-0">
-              {addingColumn ? (
-                <form onSubmit={handleAddColumn}>
-                  <input
-                    autoFocus
-                    value={newColTitle}
-                    onChange={(e) => setNewColTitle(e.target.value)}
-                    onBlur={() => { setAddingColumn(false); setNewColTitle(''); }}
-                    placeholder="Column name..."
-                    className="w-full dark:bg-white/5 dark:border-brand-500/50 dark:text-white dark:placeholder-slate-500 light:bg-white light:border-brand-500 light:text-slate-800 light:placeholder-slate-400 rounded-lg px-3.5 py-2.5 text-sm focus:outline-none"
-                  />
-                </form>
-              ) : (
-                <button
-                  onClick={() => setAddingColumn(true)}
-                  className="w-full flex items-center gap-2 px-4 py-3 dark:text-slate-500 dark:hover:text-white light:text-slate-500 light:hover:text-slate-700 border border-dashed dark:border-white/10 light:border-slate-200 dark:hover:border-white/20 rounded-xl text-sm transition"
-                >
-                  <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-                  </svg>
-                  Add column
-                </button>
-              )}
+              <div className="w-72 shrink-0">
+                {addingColumn ? (
+                  <form onSubmit={handleAddColumn}>
+                    <input
+                      autoFocus
+                      value={newColTitle}
+                      onChange={(e) => setNewColTitle(e.target.value)}
+                      onBlur={() => { setAddingColumn(false); setNewColTitle(''); }}
+                      placeholder="Column name..."
+                      className="w-full dark:bg-white/5 dark:border-brand-500/50 dark:text-white dark:placeholder-slate-500 light:bg-white light:border-brand-500 light:text-slate-800 light:placeholder-slate-400 rounded-lg px-3.5 py-2.5 text-sm focus:outline-none"
+                    />
+                  </form>
+                ) : (
+                  <button
+                    onClick={() => setAddingColumn(true)}
+                    className="w-full flex items-center gap-2 px-4 py-3 dark:text-slate-500 dark:hover:text-white light:text-slate-500 light:hover:text-slate-700 border border-dashed dark:border-white/10 light:border-slate-200 dark:hover:border-white/20 rounded-xl text-sm transition"
+                  >
+                    <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                    </svg>
+                    Add column
+                  </button>
+                )}
+              </div>
             </div>
           </div>
-        </div>
-      </DragDropContext>
+        </DragDropContext>
+      )}
 
       {selectedTask && (
         <TaskModal

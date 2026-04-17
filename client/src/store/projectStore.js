@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import api from '../api/axios';
 
+const dueNotificationKeys = new Set();
+
 const useNotificationStore = create((set) => ({
   notifications: [],
   addNotification: (notification) => set((s) => ({
@@ -12,30 +14,40 @@ const useNotificationStore = create((set) => ({
   clearAll: () => set({ notifications: [] }),
 }));
 
+const showBrowserNotification = (notification) => {
+  if (typeof window === 'undefined' || !('Notification' in window)) return;
+  if (Notification.permission !== 'granted') return;
+
+  new Notification(notification.title, {
+    body: notification.message,
+    silent: true,
+  });
+};
+
 const checkDueDates = (tasks) => {
   const now = new Date();
   const tomorrow = new Date(now);
   tomorrow.setDate(tomorrow.getDate() + 1);
-  
+
   tasks.forEach((task) => {
     if (!task.dueDate) return;
     const dueDate = new Date(task.dueDate);
-    
-    if (dueDate < now) {
-      useNotificationStore.getState().addNotification({
-        type: 'overdue',
-        title: 'Task overdue',
-        message: `"${task.title}" is past its due date`,
-        taskId: task._id,
-      });
-    } else if (dueDate <= tomorrow) {
-      useNotificationStore.getState().addNotification({
-        type: 'due-soon',
-        title: 'Due soon',
-        message: `"${task.title}" is due soon`,
-        taskId: task._id,
-      });
-    }
+    const status = dueDate < now ? 'overdue' : dueDate <= tomorrow ? 'due-soon' : null;
+    if (!status) return;
+
+    const key = `${task._id}:${status}`;
+    if (dueNotificationKeys.has(key)) return;
+    dueNotificationKeys.add(key);
+
+    const notification = {
+      type: status,
+      title: status === 'overdue' ? 'Task overdue' : 'Due soon',
+      message: `"${task.title}" is ${status === 'overdue' ? 'past its due date' : 'due within 24 hours'}`,
+      taskId: task._id,
+    };
+
+    useNotificationStore.getState().addNotification(notification);
+    showBrowserNotification(notification);
   });
 };
 
@@ -53,6 +65,13 @@ const useProjectStore = create((set, get) => ({
       set({ projects: data, loading: false });
     } catch (err) {
       set({ error: err.response?.data?.message || 'Failed to fetch projects', loading: false });
+    }
+  },
+
+  requestBrowserNotificationPermission: async () => {
+    if (typeof window === 'undefined' || !('Notification' in window)) return;
+    if (Notification.permission === 'default') {
+      await Notification.requestPermission();
     }
   },
 
@@ -91,6 +110,12 @@ const useProjectStore = create((set, get) => ({
       projects: s.projects.filter((p) => p._id !== id),
       currentProject: s.currentProject?._id === id ? null : s.currentProject,
     }));
+  },
+
+  generateShareToken: async (projectId) => {
+    const { data } = await api.post(`/projects/${projectId}/share-token`);
+    set({ currentProject: data });
+    return data;
   },
 
   addColumn: async (projectId, payload) => {
@@ -209,5 +234,5 @@ const useProjectStore = create((set, get) => ({
   setCurrentProject: (project) => set({ currentProject: project }),
 }));
 
-export { useNotificationStore };
+export { useNotificationStore, checkDueDates };
 export default useProjectStore;

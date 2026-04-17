@@ -6,9 +6,10 @@ const PRIORITIES = ['low', 'medium', 'high', 'urgent'];
 
 export default function TaskModal({ task, onClose, socket }) {
   const { currentProject, updateTask, deleteTask, addComment, addSubTask, updateSubTask, deleteSubTask } = useProjectStore();
+  const allTasks = useProjectStore((s) => s.tasks);
   const storeTask = useProjectStore((s) => s.tasks.find((t) => String(t._id) === String(task._id)));
   const liveTask = storeTask || task;
-  const [form, setForm] = useState({ ...task });
+  const [form, setForm] = useState({ ...task, dependencies: task.dependencies || [], recurrence: task.recurrence || 'none' });
   const [comment, setComment] = useState('');
   const [saving, setSaving] = useState(false);
   const [labelInput, setLabelInput] = useState('');
@@ -24,7 +25,10 @@ export default function TaskModal({ task, onClose, socket }) {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const updated = await updateTask(task._id, form);
+      const updated = await updateTask(task._id, {
+        ...form,
+        dependencies: form.dependencies?.map((dep) => dep._id || dep) || [],
+      });
       socket?.emit('task:updated', { projectId: task.project, task: updated });
     } finally {
       setSaving(false);
@@ -106,6 +110,41 @@ export default function TaskModal({ task, onClose, socket }) {
                   placeholder="Type label + Enter"
                   className="w-full dark:bg-white/5 dark:border-white/8 dark:text-white dark:placeholder-slate-600 light:bg-white light:border-slate-300 light:text-slate-800 light:placeholder-slate-400 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-brand-500 transition"
                 />
+              </div>
+
+              <div>
+                <label className="block text-xs dark:text-slate-500 light:text-slate-500 mb-1.5 uppercase tracking-wide">Dependencies</label>
+                <select
+                  multiple
+                  value={form.dependencies?.map((dep) => dep._id || dep) || []}
+                  onChange={(e) => {
+                    const values = Array.from(e.target.selectedOptions, (option) => option.value);
+                    setForm({ ...form, dependencies: values });
+                  }}
+                  className="w-full dark:bg-white/5 dark:border-white/8 dark:text-white dark:placeholder-slate-600 light:bg-white light:border-slate-300 light:text-slate-800 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-brand-500 transition"
+                >
+                  {allTasks
+                    .filter((t) => String(t._id) !== String(task._id))
+                    .map((t) => (
+                      <option key={t._id} value={t._id} className="dark:bg-[#1a1a24] light:bg-white">
+                        {t.title}
+                      </option>
+                    ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs dark:text-slate-500 light:text-slate-500 mb-1.5 uppercase tracking-wide">Recurrence</label>
+                <select
+                  value={form.recurrence}
+                  onChange={(e) => setForm({ ...form, recurrence: e.target.value })}
+                  className="w-full dark:bg-white/5 dark:border-white/8 dark:text-white dark:placeholder-slate-600 light:bg-white light:border-slate-300 light:text-slate-800 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-brand-500 transition"
+                >
+                  <option value="none">No recurrence</option>
+                  <option value="daily">Daily</option>
+                  <option value="weekly">Weekly</option>
+                  <option value="monthly">Monthly</option>
+                </select>
               </div>
 
               <div>

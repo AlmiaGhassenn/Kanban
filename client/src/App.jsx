@@ -5,6 +5,7 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
 import BoardPage from './pages/BoardPage';
+import JoinInvitePage from './pages/JoinInvitePage';
 import Layout from './components/Layout/Layout';
 import NotificationToast from './components/NotificationToast';
 import ThemeProvider from './components/ThemeProvider';
@@ -41,6 +42,7 @@ export default function App() {
         <Routes>
           <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
           <Route path="/register" element={<PublicRoute><RegisterPage /></PublicRoute>} />
+          <Route path="/join/:token" element={<PrivateRoute><JoinInvitePage /></PrivateRoute>} />
           <Route path="/" element={<PrivateRoute><Layout /></PrivateRoute>}>
             <Route index element={<Navigate to="/dashboard" replace />} />
             <Route path="dashboard" element={<DashboardPage />} />

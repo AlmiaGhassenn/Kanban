@@ -1,4 +1,5 @@
 const router = require('express').Router();
+const crypto = require('crypto');
 const Project = require('../models/Project');
 const Task = require('../models/Task');
 const authMiddleware = require('../middleware/auth');
@@ -89,6 +90,22 @@ router.delete('/:id', async (req, res) => {
     await Task.deleteMany({ project: project._id });
     await project.deleteOne();
     res.json({ message: 'Project deleted' });
+  } catch {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+router.post('/:id/share-token', async (req, res) => {
+  try {
+    const project = await Project.findById(req.params.id);
+    if (!project) return res.status(404).json({ message: 'Project not found' });
+    if (!project.isAdmin(req.user._id)) return res.status(403).json({ message: 'Access denied' });
+
+    project.shareToken = project.shareToken || crypto.randomBytes(12).toString('hex');
+    await project.save();
+    await project.populate('owner', 'name email avatar');
+    await project.populate('members.user', 'name email avatar');
+    res.json(project);
   } catch {
     res.status(500).json({ message: 'Server error' });
   }

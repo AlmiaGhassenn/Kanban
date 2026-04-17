@@ -26,6 +26,8 @@ const taskSchema = new mongoose.Schema(
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     priority: { type: String, enum: ['low', 'medium', 'high', 'urgent'], default: 'medium' },
     dueDate: { type: Date, default: null },
+    dependencies: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Task' }],
+    recurrence: { type: String, enum: ['none', 'daily', 'weekly', 'monthly'], default: 'none' },
     order: { type: Number, default: 0 },
     labels: [{ type: String }],
     comments: [commentSchema],

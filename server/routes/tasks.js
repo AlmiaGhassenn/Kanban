@@ -16,6 +16,7 @@ router.get('/project/:projectId', async (req, res) => {
       .populate('assignee', 'name email avatar')
       .populate('createdBy', 'name email avatar')
       .populate('comments.author', 'name email avatar')
+      .populate('dependencies', 'title')
       .sort({ order: 1 });
 
     res.json(tasks);
@@ -26,7 +27,7 @@ router.get('/project/:projectId', async (req, res) => {
 
 router.post('/', async (req, res) => {
   try {
-    const { title, description, projectId, columnId, assignee, priority, dueDate, labels } = req.body;
+    const { title, description, projectId, columnId, assignee, priority, dueDate, labels, dependencies, recurrence } = req.body;
     if (!title || !projectId || !columnId) {
       return res.status(400).json({ message: 'title, projectId, and columnId are required' });
     }
@@ -45,11 +46,14 @@ router.post('/', async (req, res) => {
       priority: priority || 'medium',
       dueDate: dueDate || null,
       labels: labels || [],
+      dependencies: dependencies || [],
+      recurrence: recurrence || 'none',
       order,
     });
 
     await task.populate('assignee', 'name email avatar');
     await task.populate('createdBy', 'name email avatar');
+    await task.populate('dependencies', 'title');
     
     await Activity.create({
       project: projectId,
@@ -74,10 +78,10 @@ router.put('/:id', async (req, res) => {
     if (!project) return res.status(404).json({ message: 'Project not found' });
     if (!project.isMember(req.user._id)) return res.status(403).json({ message: 'Access denied' });
 
-    const allowed = ['title', 'description', 'assignee', 'priority', 'dueDate', 'labels', 'columnId', 'order'];
+    const allowed = ['title', 'description', 'assignee', 'priority', 'dueDate', 'labels', 'columnId', 'order', 'dependencies', 'recurrence'];
     const changes = {};
     allowed.forEach((field) => {
-      if (req.body[field] !== undefined && req.body[field] !== task[field]) {
+      if (req.body[field] !== undefined && JSON.stringify(req.body[field]) !== JSON.stringify(task[field])) {
         changes[field] = { from: task[field], to: req.body[field] };
         task[field] = req.body[field];
       }
@@ -87,6 +91,7 @@ router.put('/:id', async (req, res) => {
     await task.populate('assignee', 'name email avatar');
     await task.populate('createdBy', 'name email avatar');
     await task.populate('comments.author', 'name email avatar');
+    await task.populate('dependencies', 'title');
     
     if (Object.keys(changes).length > 0) {
       await Activity.create({

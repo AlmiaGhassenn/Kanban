@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const crypto = require('crypto');
 
 const columnSchema = new mongoose.Schema({
   title: { type: String, required: true, trim: true },
@@ -20,6 +21,11 @@ const projectSchema = new mongoose.Schema(
     owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     members: [memberSchema],
     columns: [columnSchema],
+    shareToken: {
+      type: String,
+      unique: true,
+      default: () => crypto.randomBytes(12).toString('hex'),
+    },
   },
   { timestamps: true }
 );

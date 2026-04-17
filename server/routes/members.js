@@ -5,6 +5,28 @@ const authMiddleware = require('../middleware/auth');
 
 router.use(authMiddleware);
 
+router.post('/join/:token', async (req, res) => {
+  try {
+    const { token } = req.params;
+    const project = await Project.findOne({ shareToken: token });
+    if (!project) return res.status(404).json({ message: 'Invalid invite link' });
+
+    if (project.isMember(req.user._id)) {
+      await project.populate('owner', 'name email avatar');
+      await project.populate('members.user', 'name email avatar');
+      return res.json(project);
+    }
+
+    project.members.push({ user: req.user._id, role: 'member' });
+    await project.save();
+    await project.populate('owner', 'name email avatar');
+    await project.populate('members.user', 'name email avatar');
+    res.json(project);
+  } catch {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 router.post('/:projectId/invite', async (req, res) => {
   try {
     const { email, role } = req.body;
